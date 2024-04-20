@@ -47,7 +47,6 @@ const queries = {
             }
             const jwtObj = new jwt_1.default();
             const userToken = yield jwtObj.generateToken(userInDb);
-            console.log(userToken);
             return userToken;
         }
         catch (err) {
@@ -56,10 +55,8 @@ const queries = {
     }),
     getCurrentUser: (parent, args, ctx) => __awaiter(void 0, void 0, void 0, function* () {
         var _b;
-        console.log(ctx);
         const id = (_b = ctx.user) === null || _b === void 0 ? void 0 : _b.id;
         if (!id) {
-            console.log("nukkk");
             return null;
         }
         const user = yield db_1.prismaClient.user.findUnique({
@@ -67,10 +64,32 @@ const queries = {
                 id: id
             }
         });
-        console.log(user);
+        return user;
+    }),
+    getUserById: (parent_2, _c) => __awaiter(void 0, [parent_2, _c], void 0, function* (parent, { id }) {
+        console.log("id", id);
+        const user = yield db_1.prismaClient.user.findUnique({
+            where: {
+                id
+            }
+        });
         return user;
     })
 };
+const extraResolvers = {
+    user: {
+        tweets: (parent) => {
+            return db_1.prismaClient.tweet.findMany({
+                where: {
+                    author: {
+                        id: parent.id
+                    }
+                }
+            });
+        }
+    }
+};
 exports.resolvers = {
-    queries
+    queries,
+    extraResolvers
 };

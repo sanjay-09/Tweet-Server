@@ -2,6 +2,7 @@ import axios from "axios";
 import {prismaClient} from "../../clients/db";
 import JWTService from "../../services/jwt";
 import { graphqlContext } from "../../interfaces";
+import { PrismaClient, User } from "@prisma/client";
 const queries={
     verifyGoogleToken:async(parent:any,{token}:{token:string
     })=>{
@@ -37,7 +38,7 @@ const queries={
          }
          const jwtObj=new JWTService();
          const userToken=await jwtObj.generateToken(userInDb);
-         console.log(userToken);
+        
 
         return userToken;
        }
@@ -49,10 +50,8 @@ const queries={
 
     },
     getCurrentUser:async(parent:any,args:any,ctx:graphqlContext)=>{
-        console.log(ctx);
         const id=ctx.user?.id;
         if(!id){
-            console.log("nukkk");
             return null;
         }
         const user=await prismaClient.user.findUnique({
@@ -60,10 +59,33 @@ const queries={
                 id:id
             }
         })
-        console.log(user);
+       
         return user;
+    },
+    getUserById:async(parent:any,{id}:{id:string})=>{
+        const user=await prismaClient.user.findUnique({
+            where:{
+                id
+            }
+        })
+        return user;
+
     }
 };
+const extraResolvers={
+    user:{
+        tweets:(parent:User)=>{
+            return prismaClient.tweet.findMany({
+                where:{
+                    author:{
+                        id:parent.id
+                    }
+                }
+            })
+        }
+    }
+}
 export const resolvers={
-    queries
+    queries,
+    extraResolvers
 }
