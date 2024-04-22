@@ -3,71 +3,28 @@ import {prismaClient} from "../../clients/db";
 import JWTService from "../../services/jwt";
 import { graphqlContext } from "../../interfaces";
 import { PrismaClient, User } from "@prisma/client";
+import UserService from "../../services/user";
+const UserServiceObj=new UserService();
 const queries={
     verifyGoogleToken:async(parent:any,{token}:{token:string
     })=>{
-       try{
-        const googleToken=token;
-        const response=await axios.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${googleToken}`);
-        const info=await response.data;
-         const user=await prismaClient.user.findUnique({
-            where:{
-                email:info.email
-            }
-         })
-         if(!user){
-            await prismaClient.user.create({
-                data:{
-                    email:info.email,
-                    firstName:info.given_name,
-                    lastName:info.family_Name,
-                    profileImageUrl:info.picture
-                      
-
-                }
-            })
-
-         }
-         const userInDb=await prismaClient.user.findUnique({
-            where:{
-                email:info.email
-            }
-         })
-         if(!userInDb){
-            throw new Error('user with email')
-         }
-         const jwtObj=new JWTService();
-         const userToken=await jwtObj.generateToken(userInDb);
-        
-
-        return userToken;
-       }
-       catch(err){
-        console.log(err);
-       }
-       
-       
-
-    },
+        console.log("query");
+        const jwtToken=await UserServiceObj.verifyGoogleToken(token);
+        console.log(jwtToken);
+        return jwtToken;
+   },
     getCurrentUser:async(parent:any,args:any,ctx:graphqlContext)=>{
+        console.log("getCurrentUser");
         const id=ctx.user?.id;
         if(!id){
             return null;
         }
-        const user=await prismaClient.user.findUnique({
-            where:{
-                id:id
-            }
-        })
-       
+        const user=await UserServiceObj.getUserById(id);
+        console.log("user",user);
         return user;
     },
     getUserById:async(parent:any,{id}:{id:string})=>{
-        const user=await prismaClient.user.findUnique({
-            where:{
-                id
-            }
-        })
+        const user=await UserServiceObj.getUserById(id);
         return user;
 
     }
@@ -82,10 +39,63 @@ const extraResolvers={
                     }
                 }
             })
+        },
+        follower:async(parent:User)=>{
+            let result=await prismaClient.follows.findMany({
+                where:{
+                    following:{
+                        id:parent.id
+                    }
+                },
+                include:{
+                    follower:true,
+                    following:true
+                }
+            })
+          
+            return result.map((item)=>{return item.follower});
+            
+        },
+        following:async(parent:User)=>{
+            let result=await prismaClient.follows.findMany({
+                where:{
+                    follower:{
+                        id:parent.id
+                    }
+                },
+                include:{
+                    follower:true,
+                    following:true
+                }
+            })
+          
+            return result.map((item)=>{return item.following});
         }
     }
+    
+}
+
+const mutations={
+    followUser:async(parent:any,{id}:{id:string},ctx:graphqlContext)=>{
+              if(!ctx.user){
+                throw new Error("User is not authenticated");
+              }
+              await UserServiceObj.followUser(ctx.user.id,id);
+              return true;
+
+
+    },
+    unfollowUser:async(parent:any,{id}:{id:string},ctx:graphqlContext)=>{
+        if(!ctx.user){
+            throw new Error("User is not authenticated");
+        }
+        await UserServiceObj.unfollowUser(ctx.user.id,id);
+        return true;
+    }
+
 }
 export const resolvers={
     queries,
-    extraResolvers
+    extraResolvers,
+    mutations
 }

@@ -36,17 +36,18 @@ function initServer() {
         ${tweet_1.Tweet.types}
 
         type Query{
-             ${users_1.User.queries},
+             ${users_1.User.queries}
              ${tweet_1.Tweet.queries}
 
         }
 
         type Mutation{
             ${tweet_1.Tweet.mutations}
+            ${users_1.User.mutations}
             
         }
         `,
-            resolvers: Object.assign(Object.assign({ Query: Object.assign(Object.assign({}, users_1.User.resolvers.queries), tweet_1.Tweet.resolvers.queries), Mutation: Object.assign({}, tweet_1.Tweet.resolvers.mutations) }, users_1.User.resolvers.extraResolvers), tweet_1.Tweet.resolvers.extraResolvers)
+            resolvers: Object.assign(Object.assign({ Query: Object.assign(Object.assign({}, users_1.User.resolvers.queries), tweet_1.Tweet.resolvers.queries), Mutation: Object.assign(Object.assign({}, tweet_1.Tweet.resolvers.mutations), users_1.User.resolvers.mutations) }, users_1.User.resolvers.extraResolvers), tweet_1.Tweet.resolvers.extraResolvers)
         });
         yield graphqlServer.start();
         app.use("/graphql", (0, express4_1.expressMiddleware)(graphqlServer, {

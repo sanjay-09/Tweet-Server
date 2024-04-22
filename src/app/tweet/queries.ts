@@ -1,4 +1,5 @@
 export const queries=`#graphql
-     getAllTweets:[Tweet]
+     getAllTweets:[Tweet],
+     getUrlForTweet(imageName:String,imageType:String):String
 
 `;
