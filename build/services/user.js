@@ -65,7 +65,7 @@ class UserService {
     }
     followUser(from, to) {
         return __awaiter(this, void 0, void 0, function* () {
-            return db_1.prismaClient.follows.create({
+            return yield db_1.prismaClient.follows.create({
                 data: {
                     follower: {
                         connect: {
@@ -83,7 +83,7 @@ class UserService {
     }
     unfollowUser(from, to) {
         return __awaiter(this, void 0, void 0, function* () {
-            return db_1.prismaClient.follows.delete({
+            return yield db_1.prismaClient.follows.delete({
                 where: {
                     followerId_followingId: {
                         followerId: from,

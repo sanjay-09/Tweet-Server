@@ -56,7 +56,7 @@ class UserService{
     }
 
      async followUser(from:string,to:string){
-        return prismaClient.follows.create({
+        return await prismaClient.follows.create({
             data:{
                 follower:{
                     connect:{
@@ -69,11 +69,11 @@ class UserService{
                     }
                 }
             }
-        })
+        });
      }
 
      async unfollowUser(from:string,to:string){
-        return prismaClient.follows.delete({
+        return await prismaClient.follows.delete({
             where:{
                 followerId_followingId: {
                     followerId: from,

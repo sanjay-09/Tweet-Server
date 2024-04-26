@@ -17,9 +17,9 @@ interface createTweetData{
     imageUrl?:string
 }
 const queries={
-    getAllTweets:()=>{
+    getAllTweets:async()=>{
         
-        return tweetServiceObj.getAllTweets();
+        return await tweetServiceObj.getAllTweets();
     },
     getUrlForTweet:async(parent:any,{imageName,imageType}:{imageName:string,imageType:string},ctx:graphqlContext)=>{
         if(!ctx.user){

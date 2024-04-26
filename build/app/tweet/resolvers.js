@@ -23,9 +23,9 @@ const s3 = new client_s3_1.S3Client({
     region: process.env.AWS_DEFAULT_REGION
 });
 const queries = {
-    getAllTweets: () => {
-        return tweetServiceObj.getAllTweets();
-    },
+    getAllTweets: () => __awaiter(void 0, void 0, void 0, function* () {
+        return yield tweetServiceObj.getAllTweets();
+    }),
     getUrlForTweet: (parent_1, _a, ctx_1) => __awaiter(void 0, [parent_1, _a, ctx_1], void 0, function* (parent, { imageName, imageType }, ctx) {
         if (!ctx.user) {
             throw new Error("User is not authenticated");

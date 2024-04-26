@@ -4,6 +4,8 @@ import JWTService from "../../services/jwt";
 import { graphqlContext } from "../../interfaces";
 import { PrismaClient, User } from "@prisma/client";
 import UserService from "../../services/user";
+import { redisClient } from "../../clients/Redis";
+import { json } from "body-parser";
 const UserServiceObj=new UserService();
 const queries={
     verifyGoogleToken:async(parent:any,{token}:{token:string
@@ -20,7 +22,7 @@ const queries={
             return null;
         }
         const user=await UserServiceObj.getUserById(id);
-        console.log("user",user);
+        console.log(user);
         return user;
     },
     getUserById:async(parent:any,{id}:{id:string})=>{
@@ -49,10 +51,10 @@ const extraResolvers={
                 },
                 include:{
                     follower:true,
-                    following:true
+                   
                 }
             })
-          
+            
             return result.map((item)=>{return item.follower});
             
         },
@@ -70,6 +72,51 @@ const extraResolvers={
             })
           
             return result.map((item)=>{return item.following});
+        },
+        recommendUser:async(parent:User,_:any,ctx:graphqlContext)=>{
+            if(!ctx.user){
+                return [];
+            }
+            const cachedValue=await redisClient.get(`RECOMMEND_USER_${ctx.user.id}`);
+            if(cachedValue){
+                console.log("cached");
+                return JSON.parse(cachedValue);
+            }
+            const myfollowings=await prismaClient.follows.findMany({
+                where:{
+                   follower:{
+                    id:ctx.user.id
+                   }
+                },
+                include:{
+                    following:{
+                        include:{
+                            follower:{
+                                include:{
+                                    following:true
+                                }
+                            }
+                        }
+                    }
+                }
+            
+
+            })
+            const user:User[]=[];
+            for(const following of myfollowings){
+                for(const followingOfFollowedUser of following.following.follower){
+                    if(followingOfFollowedUser.following.id!==ctx.user.id &&myfollowings.findIndex((e)=>{
+                        e?.followingId===followingOfFollowedUser.following.id
+                    })<0){
+                       user.push(followingOfFollowedUser.following);
+                    }
+
+
+                }
+            }
+            await redisClient.set(`RECOMMEND_USER_${ctx.user.id}`,JSON.stringify(user));
+           
+            return user;
         }
     }
     
@@ -81,6 +128,7 @@ const mutations={
                 throw new Error("User is not authenticated");
               }
               await UserServiceObj.followUser(ctx.user.id,id);
+              await redisClient.del(`RECOMMEND_USER_${ctx.user.id}`);
               return true;
 
 
@@ -90,6 +138,7 @@ const mutations={
             throw new Error("User is not authenticated");
         }
         await UserServiceObj.unfollowUser(ctx.user.id,id);
+        await redisClient.del(`RECOMMEND_USER_${ctx.user.id}`);
         return true;
     }
 
