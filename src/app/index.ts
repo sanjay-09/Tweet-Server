@@ -14,9 +14,7 @@ export async function initServer(){
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({extended:true}));
     
-    app.use(cors({
-        origin:'http://localhost:3000'
-    }));
+    app.use(cors());
     const JWTServiceObj=new JWTService();
     const graphqlServer=new ApolloServer<graphqlContext>({
         typeDefs:`
@@ -54,6 +52,7 @@ export async function initServer(){
     });
     await graphqlServer.start();
     app.get("/home",(req,res)=>{
+        console.log("home is called");
         return res.status(200).send("ok");
     })
     app.use("/graphql",expressMiddleware(graphqlServer,{

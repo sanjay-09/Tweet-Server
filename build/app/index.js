@@ -26,9 +26,7 @@ function initServer() {
         const app = (0, express_1.default)();
         app.use(body_parser_1.default.json());
         app.use(body_parser_1.default.urlencoded({ extended: true }));
-        app.use((0, cors_1.default)({
-            origin: 'http://localhost:3000'
-        }));
+        app.use((0, cors_1.default)());
         const JWTServiceObj = new jwt_1.default();
         const graphqlServer = new server_1.ApolloServer({
             typeDefs: `
@@ -50,6 +48,10 @@ function initServer() {
             resolvers: Object.assign(Object.assign({ Query: Object.assign(Object.assign({}, users_1.User.resolvers.queries), tweet_1.Tweet.resolvers.queries), Mutation: Object.assign(Object.assign({}, tweet_1.Tweet.resolvers.mutations), users_1.User.resolvers.mutations) }, users_1.User.resolvers.extraResolvers), tweet_1.Tweet.resolvers.extraResolvers)
         });
         yield graphqlServer.start();
+        app.get("/home", (req, res) => {
+            console.log("home is called");
+            return res.status(200).send("ok");
+        });
         app.use("/graphql", (0, express4_1.expressMiddleware)(graphqlServer, {
             context: (_a) => __awaiter(this, [_a], void 0, function* ({ req, res }) {
                 return {
