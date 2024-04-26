@@ -53,6 +53,9 @@ export async function initServer(){
         }
     });
     await graphqlServer.start();
+    app.get("/home",(req,res)=>{
+        return res.status(400).send("ok");
+    })
     app.use("/graphql",expressMiddleware(graphqlServer,{
         context:async({req,res})=>{
             return{
