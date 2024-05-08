@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node build/index",
 
-    "build": "tsc -p . && npm start",
+    "build": "tsc -p . && npm start && npx prisma db push",
 
     "dev": "tsc-watch --onSuccess \"npm start\""
   },
