@@ -5,7 +5,11 @@
   "license": "MIT",
   "scripts": {
     "start": "node build/index",
+<<<<<<< HEAD
     "build": "tsc -p . && npm start",
+=======
+    "build": "tsc -p . && npm start ",
+>>>>>>> f33b934 (added like_unlike_funtionality)
     "dev": "tsc-watch --onSuccess \"npm start\""
   },
   "devDependencies": {

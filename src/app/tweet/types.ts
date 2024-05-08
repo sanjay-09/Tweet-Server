@@ -11,6 +11,7 @@ export const types=`#graphql
         content:String!
         imageUrl:String
         author:user
+        likes:[user]
        }
 
 `

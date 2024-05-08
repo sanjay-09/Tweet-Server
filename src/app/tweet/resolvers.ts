@@ -58,6 +58,43 @@ const queries={
         return tweet;
         
 
+    },
+    likeTweet:async(parent:any,{id}:{id:string},ctx:graphqlContext)=>{
+           if(!ctx?.user?.id){
+               throw new Error("User is not authenticated");
+
+           }
+           await prismaClient.like.create({
+            data:{
+                Tweet:{
+                    connect:{
+                        id:id
+                    }
+                },
+                author:{
+                    connect:{
+                        id:ctx?.user?.id
+                    }
+                }
+
+            }
+           });
+           return true;
+
+    },
+    unlikeTweet:async(parent:any,{id}:{id:string},ctx:graphqlContext)=>{
+        if(!ctx?.user?.id){
+            throw new Error("User is not authenticated");
+        }
+        await prismaClient.like.delete({
+            where:{
+                tweetId_userId:{
+                    tweetId:id,
+                    userId:ctx?.user?.id || ""
+                }
+            }
+        });
+        return true;
     }
 
 };
@@ -65,6 +102,26 @@ const extraResolvers={
     Tweet:{
         author:(parent:Tweet)=>{
             return userServiceObj.getUserById(parent.authorId);
+        },
+        likes:async(parent:Tweet)=>{
+            const data=await prismaClient.like.findMany({
+                where:{
+                    Tweet:{
+                        id:parent.id
+                        
+                    },
+                    
+                },
+                include:{
+                    author:true
+                }
+            });
+          const result=data.map((d)=>{
+            return d.author
+
+          });
+         return result;
+
         }
     }
 }
